@@ -11,11 +11,13 @@
     "dev": "nodemon index.ts"
   },
   "devDependencies": {
-    "@types/node": "^24.3.1",
+    "@types/node": "^24.7.2",
     "nodemon": "^3.1.10"
   },
   "dependencies": {
+    "@types/mongoose": "^5.11.96",
     "dotenv": "^17.2.2",
+    "mogoose": "^0.0.1-security",
     "typescript-telegram-bot-api": "^0.9.1"
   }
 }
