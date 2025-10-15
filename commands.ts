@@ -4,6 +4,7 @@ import {
   TelegramBot,
 } from "typescript-telegram-bot-api";
 import { UserStates } from "./interfaces/userStates";
+import { Load } from "./interfaces/loads";
 
 export const start_command = (bot: TelegramBot, msg: Message) => {
   const chat_id = msg.chat.id;
