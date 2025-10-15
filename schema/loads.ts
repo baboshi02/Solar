@@ -5,7 +5,6 @@ const LoadSchema = new Schema<Load>(
   {
     name: { type: String, required: true, unique: true },
     power: { type: Number, required: true },
-    image_url: { type: String, required: false },
   },
   { timestamps: true },
 );
