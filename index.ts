@@ -3,9 +3,12 @@ import dotenv from "dotenv";
 import { UserStates } from "./interfaces/userStates";
 import { load_command, start_command } from "./commands";
 import { Load } from "./interfaces/loads";
+import { add_load, get_loads } from "./services/load";
+import mongoose from "mongoose";
 
 dotenv.config();
 const TELEGRAM_BOT_API = process.env.TELEGRAM_BOT_API || "";
+const mongourl = process.env.MONGO_URL || "";
 const bot = new TelegramBot({ botToken: TELEGRAM_BOT_API });
 bot.startPolling();
 const userStates: UserStates = {};
@@ -14,7 +17,14 @@ const loads: UserLoad = {};
 interface UserLoad {
   [key: string]: Load;
 }
-bot.on("message:text", (msg) => {
+mongoose
+  .connect(mongourl)
+  .then(() => console.log("database connection successfully"))
+  .catch(() => {
+    console.log("database connection unsuccessfull");
+  });
+
+bot.on("message:text", async (msg) => {
   const user_id = msg.from?.id;
   const chat_id = msg.chat.id;
   const msg_text = msg.text;
@@ -35,8 +45,20 @@ bot.on("message:text", (msg) => {
       }
       if (msg_text === "show") {
         const text = "These are the available loads";
-        userStates[user_id] = "show_loads";
+        const loads = await get_loads();
+        if (!loads) {
+          const text = "there is no available loads populate it first";
+          bot.sendMessage({ chat_id, text });
+          return;
+        }
+        userStates[user_id] = "start";
         bot.sendMessage({ chat_id, text });
+        loads.map((load) => {
+          bot.sendMessage({
+            chat_id,
+            text: `Load: ${load.name} || power: ${load.power}`,
+          });
+        });
         return;
       }
     }
@@ -52,6 +74,7 @@ bot.on("message:text", (msg) => {
       const load_name = loads[user_id].name;
       const load_power = loads[user_id].power;
       const text = `Your ${load_name} have power of ${load_power}`;
+      await add_load(load_name, load_power);
       bot.sendMessage({
         chat_id,
         text,
