@@ -1,4 +1,4 @@
-import { LoadModel } from "../loads";
+import { LoadModel } from "../schema/loads";
 
 export const add_load = async (
   name: string,

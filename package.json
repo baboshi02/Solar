@@ -18,6 +18,7 @@
     "@types/mongoose": "^5.11.96",
     "dotenv": "^17.2.2",
     "mogoose": "^0.0.1-security",
+    "ts-node": "^10.9.2",
     "typescript-telegram-bot-api": "^0.9.1"
   }
 }

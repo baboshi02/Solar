@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug TS with ts-node",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "-r", // The -r flag is an alias for --require
+        "ts-node/register" // This tells Node to use ts-node to process .ts files
+      ],
+      "args": [
+        "${workspaceFolder}/index.ts" // Path to your TypeScript entry file
+      ],
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"],
+      "protocol": "inspector"
+    }
+  ]
+}
