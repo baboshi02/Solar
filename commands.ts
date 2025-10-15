@@ -8,10 +8,9 @@ import { Load } from "./interfaces/loads";
 
 export const start_command = (bot: TelegramBot, msg: Message) => {
   const chat_id = msg.chat.id;
-  const keyboard1 = "Add loads";
-  const keyboard2 = "Remove Loads";
+  const keyboard1 = "Loads";
   const reply_keyboard: ReplyKeyboardMarkup = {
-    keyboard: [[keyboard1, keyboard2]],
+    keyboard: [[keyboard1]],
     resize_keyboard: true,
     one_time_keyboard: true,
   };
@@ -24,14 +23,6 @@ export const start_command = (bot: TelegramBot, msg: Message) => {
   return;
 };
 
-export const id_command = (bot: TelegramBot, msg: Message) => {
-  const chat_id = msg.chat.id;
-  const user_id = msg.from?.id;
-  const firstname = msg.from?.first_name;
-  const text = `Hello ${firstname} whose id is ${user_id}`;
-  bot.sendMessage({ chat_id, text });
-  return;
-};
 export const load_command = (
   bot: TelegramBot,
   msg: Message,
@@ -39,12 +30,20 @@ export const load_command = (
 ) => {
   const user_id = msg.from?.id;
   const chat_id = msg.chat.id;
+  const keyboard1 = "add";
+  const keyboard2 = "show";
+  const reply_keyboard: ReplyKeyboardMarkup = {
+    keyboard: [[keyboard1, keyboard2]],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  };
   if (!user_id) return;
-  userStates[user_id] = 1;
-  const text_1 = "Enter The load name";
+  userStates[user_id] = "initial";
+  const text_1 = "What do you want to do";
   bot.sendMessage({
     chat_id,
     text: text_1,
+    reply_markup: reply_keyboard,
   });
   return;
 };
