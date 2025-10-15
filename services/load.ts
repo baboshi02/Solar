@@ -1,5 +1,8 @@
 import { LoadModel } from "../schema/loads";
 
+export const load_exitss = async (name: string) => {
+  return await LoadModel.exists({ name });
+};
 export const add_load = async (name: string, power: number) => {
   return await LoadModel.create({ name, power });
 };

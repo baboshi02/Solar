@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { UserStates } from "./interfaces/userStates";
 import { load_command, start_command } from "./commands";
 import { Load } from "./interfaces/loads";
-import { add_load, get_loads } from "./services/load";
+import { add_load, get_loads, load_exitss } from "./services/load";
 import mongoose from "mongoose";
 
 dotenv.config();
@@ -33,65 +33,62 @@ bot.on("message:text", async (msg) => {
       const text =
         "This seems to be a channel this service only works for accounts";
       console.log("loads: ", loads);
-      bot.sendMessage({ chat_id, text });
-      return;
+      return bot.sendMessage({ chat_id, text });
     }
     if (userStates[user_id] == "initial") {
       if (msg_text === "add") {
         const text = "Enter the load name ";
-        bot.sendMessage({ chat_id, text });
         userStates[user_id] = "add_load";
-        return;
+        return bot.sendMessage({ chat_id, text });
       }
       if (msg_text === "show") {
         const text = "These are the available loads";
         const loads = await get_loads();
         if (!loads) {
           const text = "there is no available loads populate it first";
-          bot.sendMessage({ chat_id, text });
-          return;
+          return bot.sendMessage({ chat_id, text });
         }
         userStates[user_id] = "start";
         bot.sendMessage({ chat_id, text });
-        loads.map((load) => {
+        return loads.map((load) => {
           bot.sendMessage({
             chat_id,
             text: `Load: ${load.name} || power: ${load.power}`,
           });
         });
-        return;
       }
     }
     if (userStates[user_id] == "add_load") {
       //TODO: Make the monsumage forced to be a number
       loads[user_id] = { name: msg_text, power: 0 };
-      bot.sendMessage({ chat_id, text: "Enter the power consumage" });
       userStates[user_id] = "add_consumage";
-      return;
+      return bot.sendMessage({ chat_id, text: "Enter the power consumage" });
     }
     if (userStates[user_id] == "add_consumage") {
       loads[user_id].power = Number(msg_text);
       const load_name = loads[user_id].name;
       const load_power = loads[user_id].power;
       const text = `Your ${load_name} have power of ${load_power}`;
+      if (await load_exitss(load_name)) {
+        const text = "Sorry load already exists";
+        userStates[user_id] = "start";
+        return bot.sendMessage({ chat_id, text });
+      }
       await add_load(load_name, load_power);
-      bot.sendMessage({
+      userStates[user_id] = "start";
+      return bot.sendMessage({
         chat_id,
         text,
       });
-      userStates[user_id] = "start";
-      return;
     }
     if (msg_text == "/start") {
-      start_command(bot, msg);
-      return;
+      return start_command(bot, msg);
     }
     if (msg_text == "/loads") {
-      load_command(bot, msg, userStates);
-      return;
+      return load_command(bot, msg, userStates);
     }
     const text = "Unknown text";
-    bot.sendMessage({
+    return bot.sendMessage({
       chat_id: msg.chat.id,
       text,
     });
