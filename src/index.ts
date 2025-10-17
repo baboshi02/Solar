@@ -17,6 +17,9 @@ const loads: UserLoad = {};
 interface UserLoad {
   [key: string]: Load;
 }
+console.log("Bot api: ", TELEGRAM_BOT_API);
+console.log("Mongours: ", mongourl);
+
 mongoose
   .connect(mongourl)
   .then(() => console.log("database connection successfully"))
@@ -32,7 +35,6 @@ bot.on("message:text", async (msg) => {
     if (!user_id) {
       const text =
         "This seems to be a channel this service only works for accounts";
-      console.log("loads: ", loads);
       return bot.sendMessage({ chat_id, text });
     }
     if (userStates[user_id] == "initial") {

@@ -8,7 +8,9 @@
   "main": "./build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.ts"
+    "dev": "nodemon src/index.ts",
+    "start":"node build/index.js",
+    "build":"tsc"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
