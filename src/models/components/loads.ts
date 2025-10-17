@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { Load } from "../interfaces/loads";
+import { Load } from "../../interfaces/components/loads";
 
 const LoadSchema = new Schema<Load>(
   {

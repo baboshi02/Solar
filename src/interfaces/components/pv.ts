@@ -1,6 +1,6 @@
-interface Battery {
+export interface PV {
   company: string;
   price: number;
-  type: "lithium" | "normal";
+  power: number;
   voltage: number;
 }

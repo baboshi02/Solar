@@ -2,7 +2,7 @@ import { TelegramBot } from "typescript-telegram-bot-api";
 import dotenv from "dotenv";
 import { UserStates } from "./interfaces/userStates";
 import { load_command, start_command } from "./commands";
-import { Load } from "./interfaces/loads";
+import { Load } from "./interfaces/components/loads";
 import { add_load, get_loads, load_exitss } from "./services/load";
 import mongoose from "mongoose";
 
