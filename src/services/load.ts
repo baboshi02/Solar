@@ -1,4 +1,5 @@
-import { LoadModel } from "../schema/loads";
+import { Load } from "../interfaces/components/loads";
+import { LoadModel } from "../models/components/loads";
 
 export const load_exitss = async (name: string) => {
   return await LoadModel.exists({ name });

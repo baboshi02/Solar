@@ -3,3 +3,6 @@
 node_modules
 package.json
 package_lock.json
+.dockerignore
+docker-compose.yaml
+Dockerfile
