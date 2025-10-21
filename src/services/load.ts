@@ -1,7 +1,6 @@
-import { Load } from "../interfaces/components/loads";
 import { LoadModel } from "../models/components/loads";
 
-export const load_exitss = async (name: string) => {
+export const load_exits = async (name: string) => {
   return await LoadModel.exists({ name });
 };
 export const add_load = async (name: string, power: number) => {

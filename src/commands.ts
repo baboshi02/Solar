@@ -3,8 +3,7 @@ import {
   ReplyKeyboardMarkup,
   TelegramBot,
 } from "typescript-telegram-bot-api";
-import { UserStates } from "./interfaces/userStates";
-import { Load } from "./interfaces/components/loads";
+import { UserStatesInterface } from "./interfaces/userStates";
 
 export const start_command = (bot: TelegramBot, msg: Message) => {
   const chat_id = msg.chat.id;
@@ -23,11 +22,7 @@ export const start_command = (bot: TelegramBot, msg: Message) => {
   return;
 };
 
-export const load_command = (
-  bot: TelegramBot,
-  msg: Message,
-  userStates: UserStates,
-) => {
+export const load_command = (bot: TelegramBot, msg: Message) => {
   const user_id = msg.from?.id;
   const chat_id = msg.chat.id;
   const keyboard1 = "add";
@@ -38,7 +33,6 @@ export const load_command = (
     one_time_keyboard: true,
   };
   if (!user_id) return;
-  userStates[user_id] = "initial";
   const text_1 = "What do you want to do";
   bot.sendMessage({
     chat_id,

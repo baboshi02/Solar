@@ -4,6 +4,6 @@ export type states =
   | "add_consumage"
   | "show_loads"
   | "start";
-export interface UserStates {
+export interface UserStatesInterface {
   [key: number]: states;
 }
