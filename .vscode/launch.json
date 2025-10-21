@@ -10,11 +10,11 @@
         "ts-node/register" // This tells Node to use ts-node to process .ts files
       ],
       "args": [
-        "${workspaceFolder}/index.ts" // Path to your TypeScript entry file
+        "${workspaceFolder}/src/index.ts" // Path to your TypeScript entry file
       ],
       "cwd": "${workspaceFolder}",
       "skipFiles": ["<node_internals>/**"],
-      "protocol": "inspector"
+      
     }
   ]
 }

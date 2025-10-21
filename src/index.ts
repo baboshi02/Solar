@@ -1,31 +1,25 @@
 import { TelegramBot } from "typescript-telegram-bot-api";
 import dotenv from "dotenv";
-import { UserStatesInterface } from "./interfaces/userStates";
-import { load_command, start_command } from "./commands";
+import { admin_command, start_command } from "./commands";
 import { Load } from "./interfaces/components/loads";
 import { add_load, get_loads, load_exits } from "./services/load";
-import mongoose from "mongoose";
 import { UserStates } from "./UserStates";
+import { connect_db } from "./db/db";
 
 dotenv.config();
 const TELEGRAM_BOT_API = process.env.TELEGRAM_BOT_API || "";
 const mongourl = process.env.MONGO_URL || "";
 const bot = new TelegramBot({ botToken: TELEGRAM_BOT_API });
-bot.startPolling();
 const loads: UserLoad = {};
 
 interface UserLoad {
   [key: string]: Load;
 }
 
-mongoose
-  .connect(mongourl)
-  .then(() => console.log("database connection successfully"))
-  .catch(() => {
-    console.log("database connection unsuccessfull");
-  });
-
+connect_db(mongourl);
 const userStates = new UserStates();
+
+bot.startPolling();
 bot.on("message:text", async (msg) => {
   const user_id = msg.from?.id;
   const chat_id = msg.chat.id;
@@ -36,10 +30,10 @@ bot.on("message:text", async (msg) => {
         "This seems to be a channel this service only works for accounts";
       return bot.sendMessage({ chat_id, text });
     }
-    if (userStates.is_initial(user_id)) {
+    if (userStates.state_type(user_id) === "admin") {
       if (msg_text === "add") {
         const text = "Enter the load name ";
-        userStates.add_load(user_id);
+        userStates.set_add_load_state(user_id);
         return bot.sendMessage({ chat_id, text });
       }
       if (msg_text === "show") {
@@ -58,35 +52,41 @@ bot.on("message:text", async (msg) => {
         });
       }
     }
-    if (userStates.is_add_load(user_id)) {
+    if (userStates.state_type(user_id) === "add_load") {
       //TODO: Make the monsumage forced to be a number
       loads[user_id] = { name: msg_text, power: 0 };
-      userStates.add_consumage(user_id);
+      const load_name = msg_text;
+      if (await load_exits(load_name)) {
+        const text = "Sorry load already exists";
+        userStates.set_initial_state(user_id);
+        return bot.sendMessage({ chat_id, text });
+      }
+      userStates.set_add_consumage_state(user_id);
       return bot.sendMessage({ chat_id, text: "Enter the power consumage" });
     }
-    if (userStates.is_add_consumage(user_id)) {
+    if (userStates.state_type(user_id) === "add_consumage") {
       loads[user_id].power = Number(msg_text);
       const load_name = loads[user_id].name;
       const load_power = loads[user_id].power;
       const text = `Your ${load_name} have power of ${load_power}`;
-      if (await load_exits(load_name)) {
-        const text = "Sorry load already exists";
-        userStates.restart_state(user_id);
-        return bot.sendMessage({ chat_id, text });
-      }
       await add_load(load_name, load_power);
-      userStates.restart_state(user_id);
+      userStates.set_initial_state(user_id);
       return bot.sendMessage({
         chat_id,
         text,
       });
     }
     if (msg_text == "/start") {
-      return start_command(bot, msg);
+      start_command(bot, msg);
+      return userStates.set_initial_state(user_id);
     }
-    if (msg_text == "/loads") {
-      load_command(bot, msg);
-      return userStates.restart_state(user_id);
+    if (msg_text == "/admin") {
+      admin_command(bot, msg);
+      return userStates.set_admin_state(user_id);
+    }
+    if (msg_text == "/customer") {
+      const text = "Hello client to our services";
+      return bot.sendMessage({ chat_id, text });
     }
     const text = "Unknown text";
     return bot.sendMessage({

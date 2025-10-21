@@ -7,9 +7,10 @@ import { UserStatesInterface } from "./interfaces/userStates";
 
 export const start_command = (bot: TelegramBot, msg: Message) => {
   const chat_id = msg.chat.id;
-  const keyboard1 = "Loads";
+  const keyboard1 = "/admin";
+  const keyboard2 = "/customer";
   const reply_keyboard: ReplyKeyboardMarkup = {
-    keyboard: [[keyboard1]],
+    keyboard: [[keyboard1, keyboard2]],
     resize_keyboard: true,
     one_time_keyboard: true,
   };
@@ -22,7 +23,7 @@ export const start_command = (bot: TelegramBot, msg: Message) => {
   return;
 };
 
-export const load_command = (bot: TelegramBot, msg: Message) => {
+export const admin_command = (bot: TelegramBot, msg: Message) => {
   const user_id = msg.from?.id;
   const chat_id = msg.chat.id;
   const keyboard1 = "add";
