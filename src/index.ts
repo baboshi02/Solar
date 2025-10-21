@@ -1,6 +1,6 @@
 import { ReplyKeyboardMarkup, TelegramBot } from "typescript-telegram-bot-api";
 import dotenv from "dotenv";
-import { admin_command, start_command } from "./commands";
+import { keyboard_markup } from "./commands";
 import { Load } from "./interfaces/components/loads";
 import { add_load, get_loads, load_exits } from "./services/load";
 import { UserStates } from "./UserStates";
@@ -33,7 +33,12 @@ bot.on("message:text", async (msg) => {
   const state = userStates.state_type(user_id);
   try {
     if (msg_text == "/start") {
-      start_command(bot, msg);
+      const text = "Choose the service you want";
+      const reply_markup = keyboard_markup(
+        ["/admin", "/client"],
+        ["/joks", "/jaks"],
+      );
+      bot.sendMessage({ chat_id, text, reply_markup });
       return userStates.set_state(user_id, "initial");
     }
     if (state === "client") {
@@ -101,7 +106,13 @@ bot.on("message:text", async (msg) => {
       });
     }
     if (msg_text == "/admin") {
-      admin_command(bot, msg);
+      const reply_markup = keyboard_markup(["add", "show"]);
+      const text = "What do you want to do";
+      bot.sendMessage({
+        chat_id,
+        text,
+        reply_markup,
+      });
       return userStates.set_state(user_id, "admin");
     }
     if (msg_text == "/customer") {
