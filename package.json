@@ -9,8 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.ts",
-    "start":"node build/index.js",
-    "build":"tsc"
+    "start": "node build/index.js",
+    "build": "tsc"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
@@ -21,6 +21,7 @@
     "dotenv": "^17.2.2",
     "mogoose": "^0.0.1-security",
     "ts-node": "^10.9.2",
-    "typescript-telegram-bot-api": "^0.9.1"
+    "typescript-telegram-bot-api": "^0.9.1",
+    "xstate": "^5.23.0"
   }
 }

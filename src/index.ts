@@ -1,7 +1,7 @@
-import { ReplyKeyboardMarkup, TelegramBot } from "typescript-telegram-bot-api";
+import { TelegramBot } from "typescript-telegram-bot-api";
 import dotenv from "dotenv";
 import { keyboard_markup } from "./commands";
-import { Load } from "./interfaces/components/loads";
+import { LoadInterface } from "./interfaces/components/loads";
 import { add_load, load_exits } from "./services/load";
 import { UserStates } from "./UserStates";
 import { connect_db } from "./db/db";
@@ -18,7 +18,7 @@ interface Components {
 const components: Components = {};
 
 interface UserLoad {
-  [key: string]: Load;
+  [key: string]: LoadInterface;
 }
 
 connect_db(mongourl);
