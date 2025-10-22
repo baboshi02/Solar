@@ -2,7 +2,7 @@ import { ReplyKeyboardMarkup, TelegramBot } from "typescript-telegram-bot-api";
 import dotenv from "dotenv";
 import { keyboard_markup } from "./commands";
 import { Load } from "./interfaces/components/loads";
-import { add_load, get_loads, load_exits } from "./services/load";
+import { add_load, load_exits } from "./services/load";
 import { UserStates } from "./UserStates";
 import { connect_db } from "./db/db";
 
@@ -11,6 +11,11 @@ const TELEGRAM_BOT_API = process.env.TELEGRAM_BOT_API || "";
 const mongourl = process.env.MONGO_URL || "";
 const bot = new TelegramBot({ botToken: TELEGRAM_BOT_API });
 const loads: UserLoad = {};
+
+interface Components {
+  [key: string]: "inverter" | "pv" | "battery" | "load";
+}
+const components: Components = {};
 
 interface UserLoad {
   [key: string]: Load;
@@ -34,12 +39,35 @@ bot.on("message:text", async (msg) => {
   try {
     if (msg_text == "/start") {
       const text = "Choose the service you want";
-      const reply_markup = keyboard_markup(
-        ["/admin", "/client"],
-        ["/joks", "/jaks"],
-      );
+      const reply_markup = keyboard_markup(["/admin", "/client"]);
       bot.sendMessage({ chat_id, text, reply_markup });
       return userStates.set_state(user_id, "initial");
+    }
+    if (msg_text == "/admin") {
+      const reply_markup = keyboard_markup(
+        ["inverter", "pv"],
+        ["battery", "load"],
+      );
+      const text = "What do you want to do";
+      bot.sendMessage({
+        chat_id,
+        text,
+        reply_markup,
+      });
+      return userStates.set_state(user_id, "admin");
+    }
+    if (msg_text == "/client") {
+      const text = "Hello client to our services";
+      userStates.set_state(user_id, "client");
+      const keyboard1 = "available loads";
+      const keyboard2 = "available inverters";
+      const keyboard3 = "available pvs";
+      const keyboard4 = "available batteries";
+      const reply_markup = keyboard_markup(
+        [keyboard1, keyboard2],
+        [keyboard3, keyboard4],
+      );
+      return bot.sendMessage({ chat_id, text, reply_markup });
     }
     if (state === "client") {
       if (msg_text.toLowerCase().includes("inverter")) {
@@ -60,29 +88,39 @@ bot.on("message:text", async (msg) => {
       }
     }
     if (state === "admin") {
-      if (msg_text === "add") {
-        const text = "Enter the load name ";
-        userStates.set_state(user_id, "add_load");
-        return bot.sendMessage({ chat_id, text });
+      const reply_markup = keyboard_markup(["add", "show"]);
+      const text = "select what you want to do with it";
+      if (msg_text === "inverter") {
+        components[user_id] = "inverter";
       }
-      if (msg_text === "show") {
-        const text = "These are the available loads";
-        const loads = await get_loads();
-        if (!loads) {
-          const text = "there is no available loads populate it first";
-          return bot.sendMessage({ chat_id, text });
-        }
-        bot.sendMessage({ chat_id, text });
-        return loads.map((load) => {
-          bot.sendMessage({
-            chat_id,
-            text: `Load: ${load.name} || power: ${load.power}`,
-          });
-        });
+      if (msg_text === "pv") {
+        components[user_id] = "pv";
       }
+      if (msg_text === "battery") {
+        components[user_id] = "battery";
+      }
+      if (msg_text === "load") {
+        components[user_id] = "load";
+      }
+      userStates.set_state(user_id, "add_show");
+      return bot.sendMessage({ chat_id, text, reply_markup });
     }
+    if (state === "add_show") {
+      const component = components[user_id];
+      let text;
+      if (msg_text === "add") {
+        text = `Add ${component}`;
+      } else if (msg_text === "show") {
+        text = `Show ${component}`;
+      } else {
+        text = "invalid command";
+        userStates.set_state(user_id, "initial");
+      }
+      return bot.sendMessage({ chat_id, text });
+    }
+
     if (state === "add_load") {
-      //TODO: Make the monsumage forced to be a number
+      //TODO: Make the consumage forced to be a number
       loads[user_id] = { name: msg_text, power: 0 };
       const load_name = msg_text;
       if (await load_exits(load_name)) {
@@ -104,33 +142,6 @@ bot.on("message:text", async (msg) => {
         chat_id,
         text,
       });
-    }
-    if (msg_text == "/admin") {
-      const reply_markup = keyboard_markup(["add", "show"]);
-      const text = "What do you want to do";
-      bot.sendMessage({
-        chat_id,
-        text,
-        reply_markup,
-      });
-      return userStates.set_state(user_id, "admin");
-    }
-    if (msg_text == "/customer") {
-      const text = "Hello client to our services";
-      userStates.set_state(user_id, "client");
-      const keyboard1 = "available loads";
-      const keyboard2 = "available inverters";
-      const keyboard3 = "available pvs";
-      const keyboard4 = "available batteries";
-      const keyboardMarkup: ReplyKeyboardMarkup = {
-        keyboard: [
-          [keyboard1, keyboard2],
-          [keyboard3, keyboard4],
-        ],
-        one_time_keyboard: true,
-        resize_keyboard: true,
-      };
-      bot.sendMessage({ chat_id, text, reply_markup: keyboardMarkup });
     }
     const text = "Unknown text";
     return bot.sendMessage({

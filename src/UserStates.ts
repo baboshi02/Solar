@@ -1,5 +1,6 @@
 type State =
   | "initial"
+  | "add_show"
   | "add_load"
   | "add_consumage"
   | "show_loads"
