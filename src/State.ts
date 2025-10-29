@@ -17,6 +17,14 @@ export const messagingMachine = createMachine({
   initial: "initial",
   states: {
     initial: {
+      entry: assign({
+        inverter: {},
+        load: {},
+        keyboard: [[]],
+        text: "Welcome to our service enter /start",
+        battery: {},
+        pv: {},
+      }),
       on: {
         START_COMMAND: {
           target: "start",
@@ -41,6 +49,14 @@ export const messagingMachine = createMachine({
           actions: assign({
             text: "How are you doing",
           }),
+        },
+      },
+    },
+    completed: {
+      on: {
+        RESTART_COMMAND: {
+          target: "initial",
+          actions: assign({ text: "Completed" }),
         },
       },
     },
@@ -126,6 +142,10 @@ export const messagingMachine = createMachine({
               target: "battery_company",
               actions: assign({
                 text: "Enter battery company",
+                battery: ({ context, event }) => ({
+                  ...context.battery,
+                  name: event.payload.input,
+                }),
               }),
             },
           },
@@ -137,6 +157,10 @@ export const messagingMachine = createMachine({
               actions: assign({
                 text: "Enter battery type",
                 keyboard: [["lithium", "normal"]],
+                battery: ({ context, event }) => ({
+                  ...context.battery,
+                  company: event.payload.input,
+                }),
               }),
             },
           },
@@ -145,7 +169,13 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "battery_price",
-              actions: assign({ text: "Enter battery price" }),
+              actions: assign({
+                text: "Enter battery price",
+                battery: ({ context, event }) => ({
+                  ...context.battery,
+                  type: event.payload.input,
+                }),
+              }),
             },
           },
         },
@@ -153,14 +183,27 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "battery_voltage",
-              actions: assign({ text: "Enter voltage level" }),
+              actions: assign({
+                text: "Enter voltage level",
+                battery: ({ context, event }) => ({
+                  ...context.battery,
+                  price: event.payload.input,
+                }),
+              }),
             },
           },
         },
         battery_voltage: {
           on: {
             NEXT_INPUT: {
-              actions: assign({ text: "Well done you have completed" }),
+              target: "#messaging.completed",
+              actions: assign({
+                text: "Well done you have completed",
+                battery: ({ context, event }) => ({
+                  ...context.battery,
+                  voltage: event.payload.input,
+                }),
+              }),
             },
           },
         },
@@ -186,24 +229,13 @@ export const messagingMachine = createMachine({
         load_power: {
           on: {
             NEXT_INPUT: {
-              target: "completed",
+              target: "#messaging.completed",
               actions: assign({
                 text: "Load completed",
                 load: ({ context, event }) => ({
                   ...context.load,
                   power: event.payload.input,
                 }),
-              }),
-            },
-          },
-        },
-        completed: {
-          on: {
-            NEXT_INPUT: {
-              target: "#messaging.initial",
-              actions: assign({
-                text: ({ context, event }) =>
-                  `Your ${context.load.name} is ${context.load.power} wattage`,
               }),
             },
           },
@@ -217,7 +249,13 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "pv_price",
-              actions: assign({ text: "Enter Price" }),
+              actions: assign({
+                text: "Enter Price",
+                pv: ({ context, event }) => ({
+                  ...context.pv,
+                  company: event.payload.input,
+                }),
+              }),
             },
           },
         },
@@ -225,7 +263,14 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "pv_power",
-              actions: assign({ text: "Enter Power" }),
+              actions: assign({
+                text: "Enter Power",
+
+                pv: ({ context, event }) => ({
+                  ...context.pv,
+                  price: event.payload.input,
+                }),
+              }),
             },
           },
         },
@@ -233,14 +278,29 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "pv_voltage",
-              actions: assign({ text: "Enter Voltage" }),
+              actions: assign({
+                text: "Enter Voltage",
+
+                pv: ({ context, event }) => ({
+                  ...context.pv,
+                  power: event.payload.input,
+                }),
+              }),
             },
           },
         },
         pv_voltage: {
           on: {
             NEXT_INPUT: {
-              actions: assign({ text: "Completed" }),
+              target: "#messaging.completed",
+              actions: assign({
+                text: "Completed",
+
+                pv: ({ context, event }) => ({
+                  ...context.pv,
+                  voltage: event.payload.input,
+                }),
+              }),
             },
           },
         },
@@ -253,7 +313,13 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "inverter_price",
-              actions: assign({ text: "Enter price" }),
+              actions: assign({
+                text: "Enter price",
+                inverter: ({ context, event }) => ({
+                  ...context.inverter,
+                  company: event.payload.input,
+                }),
+              }),
             },
           },
         },
@@ -261,7 +327,13 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "inverter_min_voltage",
-              actions: assign({ text: "Enter min_pv_voltage" }),
+              actions: assign({
+                text: "Enter min_pv_voltage",
+                inverter: ({ context, event }) => ({
+                  ...context.inverter,
+                  price: event.payload.input,
+                }),
+              }),
             },
           },
         },
@@ -269,7 +341,13 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "inverter_max_voltage",
-              actions: assign({ text: "Enter max_pv_voltage" }),
+              actions: assign({
+                text: "Enter max_pv_voltage",
+                inverter: ({ context, event }) => ({
+                  ...context.inverter,
+                  min_pv_input_voltage: event.payload.input,
+                }),
+              }),
             },
           },
         },
@@ -277,7 +355,13 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "inverter_battery_voltage",
-              actions: assign({ text: "Enter battery voltage" }),
+              actions: assign({
+                text: "Enter battery voltage",
+                inverter: ({ context, event }) => ({
+                  ...context.inverter,
+                  max_pv_input_voltage: event.payload.input,
+                }),
+              }),
             },
           },
         },
@@ -285,15 +369,27 @@ export const messagingMachine = createMachine({
           on: {
             NEXT_INPUT: {
               target: "inverter_power",
-              actions: assign({ text: "Enter Inverter power" }),
+              actions: assign({
+                text: "Enter Inverter power",
+                inverter: ({ context, event }) => ({
+                  ...context.inverter,
+                  battery_input_voltage: event.payload.input,
+                }),
+              }),
             },
           },
         },
         inverter_power: {
           on: {
             NEXT_INPUT: {
-              target: "#messaging.initial",
-              actions: assign({ text: "Completed" }),
+              target: "#messaging.completed",
+              actions: assign({
+                text: "Completed",
+                inverter: ({ context, event }) => ({
+                  ...context.inverter,
+                  power: event.payload.input,
+                }),
+              }),
             },
           },
         },

@@ -4,6 +4,10 @@ import { connect_db } from "./db/db";
 import { Actor, createActor } from "xstate";
 import { messagingMachine } from "./State";
 import { keyboard_markup } from "./commands";
+import { PV } from "./interfaces/components/pv";
+import { LoadInterface } from "./interfaces/components/loads";
+import { BatteryInterface } from "./interfaces/components/battery";
+import { Inverter } from "./interfaces/components/inverter";
 
 dotenv.config();
 const TELEGRAM_BOT_API = process.env.TELEGRAM_BOT_API || "";
@@ -47,7 +51,7 @@ bot.on("message:text", async (msg) => {
   const msg_text = msg.text;
   if (msg_text === "/start") destroyActor(chat_id);
   const actor = getOrCreateActor(chat_id);
-  const state = actor.getSnapshot();
+  let state = actor.getSnapshot();
   const state_value = state.value;
 
   let state_text = actor.getSnapshot().context.text;
@@ -139,10 +143,42 @@ bot.on("message:text", async (msg) => {
       state.matches("pv") ||
       state.matches("load")
     ) {
+      const previous_state = state;
       actor.send({ type: "NEXT_INPUT", payload: { input: msg.text } });
       text = getContextText();
-      console.log("text: ", text);
       bot.sendMessage({ chat_id, text });
+      const current_state = actor.getSnapshot();
+      if (current_state.matches("completed")) {
+        text = "";
+        if (previous_state.matches("pv")) {
+          const pv_context = current_state.context.pv;
+          for (const key of Object.keys(pv_context)) {
+            const pvKey = key as keyof PV;
+            text += `${key}:${pv_context[pvKey]}\n`;
+          }
+        } else if (previous_state.matches("load")) {
+          const load_context = current_state.context.load;
+          for (const key of Object.keys(load_context)) {
+            const loadKey = key as keyof LoadInterface;
+            text += `${key}:${load_context[loadKey]}\n`;
+          }
+        } else if (previous_state.matches("battery")) {
+          const battery_context = current_state.context.battery;
+          for (const key of Object.keys(battery_context)) {
+            const batteryKey = key as keyof BatteryInterface;
+            text += `${key}:${battery_context[batteryKey]}\n`;
+          }
+        } else if (previous_state.matches("inverter")) {
+          const inverter_context = current_state.context.inverter;
+          for (const key of Object.keys(inverter_context)) {
+            const inverterKey = key as keyof Inverter;
+            text += `${key}:${inverter_context[inverterKey]}\n`;
+          }
+        }
+        bot.sendMessage({ chat_id, text });
+        console.log("Hello");
+        actor.send({ type: "RESTART_COMMAND" });
+      }
     }
   } catch (error) {
     console.error(error);
