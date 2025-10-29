@@ -1,9 +1,17 @@
 import { assign, createMachine } from "xstate";
+import { Inverter } from "./interfaces/components/inverter";
+import { BatteryInterface } from "./interfaces/components/battery";
+import { PV } from "./interfaces/components/pv";
+import { LoadInterface } from "./interfaces/components/loads";
 
 export const messagingMachine = createMachine({
   context: {
     text: "Welcome to our service enter /start",
     keyboard: [] as any,
+    inverter: {} as Partial<Record<keyof Inverter, string>>,
+    battery: {} as Partial<Record<keyof BatteryInterface, string>>,
+    pv: {} as Partial<Record<keyof PV, string>>,
+    load: {} as Partial<Record<keyof LoadInterface, string>>,
   },
   id: "messaging",
   initial: "initial",
@@ -82,7 +90,7 @@ export const messagingMachine = createMachine({
         PV_COMMAND: {
           target: "pv",
           actions: assign({
-            text: "Enter pv name",
+            text: "Enter pv company",
           }),
         },
         INVERTER_COMMAND: {
@@ -114,7 +122,7 @@ export const messagingMachine = createMachine({
       states: {
         battery_name: {
           on: {
-            NEXT: {
+            NEXT_INPUT: {
               target: "battery_company",
               actions: assign({
                 text: "Enter battery company",
@@ -124,7 +132,7 @@ export const messagingMachine = createMachine({
         },
         battery_company: {
           on: {
-            NEXT: {
+            NEXT_INPUT: {
               target: "battery_type",
               actions: assign({
                 text: "Enter battery type",
@@ -135,7 +143,7 @@ export const messagingMachine = createMachine({
         },
         battery_type: {
           on: {
-            NEXT: {
+            NEXT_INPUT: {
               target: "battery_price",
               actions: assign({ text: "Enter battery price" }),
             },
@@ -143,7 +151,7 @@ export const messagingMachine = createMachine({
         },
         battery_price: {
           on: {
-            NEXT: {
+            NEXT_INPUT: {
               target: "battery_voltage",
               actions: assign({ text: "Enter voltage level" }),
             },
@@ -151,15 +159,145 @@ export const messagingMachine = createMachine({
         },
         battery_voltage: {
           on: {
-            NEXT: {
+            NEXT_INPUT: {
               actions: assign({ text: "Well done you have completed" }),
             },
           },
         },
       },
     },
-    load: {},
-    pv: {},
-    inverter: {},
+    load: {
+      initial: "load_name",
+      states: {
+        load_name: {
+          on: {
+            NEXT_INPUT: {
+              target: "load_power",
+              actions: assign({
+                text: "Enter power",
+                load: ({ context, event }) => ({
+                  ...context.load,
+                  name: event.payload.input,
+                }),
+              }),
+            },
+          },
+        },
+        load_power: {
+          on: {
+            NEXT_INPUT: {
+              target: "completed",
+              actions: assign({
+                text: "Load completed",
+                load: ({ context, event }) => ({
+                  ...context.load,
+                  power: event.payload.input,
+                }),
+              }),
+            },
+          },
+        },
+        completed: {
+          on: {
+            NEXT_INPUT: {
+              target: "#messaging.initial",
+              actions: assign({
+                text: ({ context, event }) =>
+                  `Your ${context.load.name} is ${context.load.power} wattage`,
+              }),
+            },
+          },
+        },
+      },
+    },
+    pv: {
+      initial: "pv_company",
+      states: {
+        pv_company: {
+          on: {
+            NEXT_INPUT: {
+              target: "pv_price",
+              actions: assign({ text: "Enter Price" }),
+            },
+          },
+        },
+        pv_price: {
+          on: {
+            NEXT_INPUT: {
+              target: "pv_power",
+              actions: assign({ text: "Enter Power" }),
+            },
+          },
+        },
+        pv_power: {
+          on: {
+            NEXT_INPUT: {
+              target: "pv_voltage",
+              actions: assign({ text: "Enter Voltage" }),
+            },
+          },
+        },
+        pv_voltage: {
+          on: {
+            NEXT_INPUT: {
+              actions: assign({ text: "Completed" }),
+            },
+          },
+        },
+      },
+    },
+    inverter: {
+      initial: "inverter_company",
+      states: {
+        inverter_company: {
+          on: {
+            NEXT_INPUT: {
+              target: "inverter_price",
+              actions: assign({ text: "Enter price" }),
+            },
+          },
+        },
+        inverter_price: {
+          on: {
+            NEXT_INPUT: {
+              target: "inverter_min_voltage",
+              actions: assign({ text: "Enter min_pv_voltage" }),
+            },
+          },
+        },
+        inverter_min_voltage: {
+          on: {
+            NEXT_INPUT: {
+              target: "inverter_max_voltage",
+              actions: assign({ text: "Enter max_pv_voltage" }),
+            },
+          },
+        },
+        inverter_max_voltage: {
+          on: {
+            NEXT_INPUT: {
+              target: "inverter_battery_voltage",
+              actions: assign({ text: "Enter battery voltage" }),
+            },
+          },
+        },
+        inverter_battery_voltage: {
+          on: {
+            NEXT_INPUT: {
+              target: "inverter_power",
+              actions: assign({ text: "Enter Inverter power" }),
+            },
+          },
+        },
+        inverter_power: {
+          on: {
+            NEXT_INPUT: {
+              target: "#messaging.initial",
+              actions: assign({ text: "Completed" }),
+            },
+          },
+        },
+      },
+    },
   },
 });

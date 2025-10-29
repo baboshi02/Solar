@@ -119,10 +119,10 @@ bot.on("message:text", async (msg) => {
         if (msg_text === "load") {
           actor.send({ type: "LOAD_COMMAND" });
         }
-        if (msg_text === "battery") {
+        if (msg_text === "pv") {
           actor.send({ type: "PV_COMMAND" });
         }
-        if (msg_text === "battery") {
+        if (msg_text === "inverter") {
           actor.send({ type: "INVERTER_COMMAND" });
         }
         text = getContextText();
@@ -133,8 +133,13 @@ bot.on("message:text", async (msg) => {
         break;
       }
     }
-    if (state.matches("battery")) {
-      actor.send({ type: "NEXT" });
+    if (
+      state.matches("battery") ||
+      state.matches("inverter") ||
+      state.matches("pv") ||
+      state.matches("load")
+    ) {
+      actor.send({ type: "NEXT_INPUT", payload: { input: msg.text } });
       text = getContextText();
       console.log("text: ", text);
       bot.sendMessage({ chat_id, text });
