@@ -1,13 +1,20 @@
 import { TelegramBot } from "typescript-telegram-bot-api";
 import dotenv from "dotenv";
 import { connect_db } from "./db/db";
-import { Actor, createActor } from "xstate";
-import { messagingMachine } from "./State";
 import { keyboard_markup } from "./commands";
-import { PV } from "./interfaces/components/pv";
+import { PVInterface } from "./interfaces/components/pv";
 import { LoadInterface } from "./interfaces/components/loads";
 import { BatteryInterface } from "./interfaces/components/battery";
-import { Inverter } from "./interfaces/components/inverter";
+import { InverterInterface } from "./interfaces/components/inverter";
+import { add_load, get_loads } from "./services/load";
+import {
+  add_battery,
+  get_all_batteries,
+  get_battery,
+} from "./services/battery";
+import { add_inverter } from "./services/inverter";
+import { add_pv } from "./services/pv";
+import { destroyActor, getOrCreateActor } from "./actor";
 
 dotenv.config();
 const TELEGRAM_BOT_API = process.env.TELEGRAM_BOT_API || "";
@@ -15,30 +22,6 @@ const mongourl = process.env.MONGO_URL || "";
 const bot = new TelegramBot({ botToken: TELEGRAM_BOT_API });
 
 connect_db(mongourl);
-type BotActor = Actor<typeof messagingMachine>;
-
-const userActors: Map<number, BotActor> = new Map();
-
-function destroyActor(chatId: number): void {
-  const actor = userActors.get(chatId);
-  if (actor) {
-    actor.stop();
-    userActors.delete(chatId);
-    console.log(`[Chat ${chatId}] Actor stopped and removed.`);
-  }
-}
-function getOrCreateActor(chatId: number): BotActor {
-  let actor = userActors.get(chatId);
-  if (!actor) {
-    actor = createActor(messagingMachine) as BotActor;
-    actor.start();
-    userActors.set(chatId, actor);
-    actor.subscribe((state) => {
-      console.log(`[Chat ${chatId}] Transitioned to: ${state.value}`);
-    });
-  }
-  return actor;
-}
 bot.startPolling();
 bot.on("message:text", async (msg) => {
   const user_id = msg.from?.id;
@@ -110,6 +93,42 @@ bot.on("message:text", async (msg) => {
         });
         break;
       }
+      case "show": {
+        bot.sendMessage({ chat_id, text: "Showing results..." });
+        let text = "";
+        if (msg_text === "battery") {
+          const batteries = await get_all_batteries();
+          for (const battery of batteries) {
+            text += battery.name + "\n";
+          }
+        }
+        if (msg_text === "load") {
+          const loads = await get_loads();
+          for (const load of loads) {
+            text += load.name + "\n";
+          }
+        }
+        if (msg_text === "pv") {
+          const pvs = await get_loads();
+          for (const pv of pvs) {
+            text += pv.name + "\n";
+          }
+        }
+        if (msg_text === "inverter") {
+          const loads = await get_loads();
+          for (const load of loads) {
+            text += load.name + "\n";
+          }
+        }
+        if (text.length === 0) {
+          text = "Not found any element";
+        }
+        bot.sendMessage({
+          chat_id,
+          text,
+        });
+        break;
+      }
       case "client": {
         text = getContextText();
         bot.sendMessage({ chat_id, text });
@@ -151,27 +170,37 @@ bot.on("message:text", async (msg) => {
       if (current_state.matches("completed")) {
         text = "";
         if (previous_state.matches("pv")) {
-          const pv_context = current_state.context.pv;
+          const pv_context = current_state.context.pv as unknown as PVInterface;
+          await add_pv(pv_context);
           for (const key of Object.keys(pv_context)) {
-            const pvKey = key as keyof PV;
+            const pvKey = key as keyof PVInterface;
             text += `${key}:${pv_context[pvKey]}\n`;
           }
         } else if (previous_state.matches("load")) {
-          const load_context = current_state.context.load;
+          const load_context = current_state.context
+            .load as unknown as LoadInterface;
+          await add_load(load_context);
+          if (!load_context) {
+            return;
+          }
           for (const key of Object.keys(load_context)) {
             const loadKey = key as keyof LoadInterface;
             text += `${key}:${load_context[loadKey]}\n`;
           }
         } else if (previous_state.matches("battery")) {
-          const battery_context = current_state.context.battery;
+          const battery_context = current_state.context
+            .battery as unknown as BatteryInterface;
+          await add_battery(battery_context);
           for (const key of Object.keys(battery_context)) {
             const batteryKey = key as keyof BatteryInterface;
             text += `${key}:${battery_context[batteryKey]}\n`;
           }
         } else if (previous_state.matches("inverter")) {
-          const inverter_context = current_state.context.inverter;
+          const inverter_context = current_state.context
+            .inverter as unknown as InverterInterface;
+          await add_inverter(inverter_context);
           for (const key of Object.keys(inverter_context)) {
-            const inverterKey = key as keyof Inverter;
+            const inverterKey = key as keyof InverterInterface;
             text += `${key}:${inverter_context[inverterKey]}\n`;
           }
         }

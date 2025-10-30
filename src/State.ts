@@ -1,16 +1,16 @@
 import { assign, createMachine } from "xstate";
-import { Inverter } from "./interfaces/components/inverter";
+import { InverterInterface } from "./interfaces/components/inverter";
 import { BatteryInterface } from "./interfaces/components/battery";
-import { PV } from "./interfaces/components/pv";
+import { PVInterface } from "./interfaces/components/pv";
 import { LoadInterface } from "./interfaces/components/loads";
 
 export const messagingMachine = createMachine({
   context: {
     text: "Welcome to our service enter /start",
     keyboard: [] as any,
-    inverter: {} as Partial<Record<keyof Inverter, string>>,
+    inverter: {} as Partial<Record<keyof InverterInterface, string>>,
     battery: {} as Partial<Record<keyof BatteryInterface, string>>,
-    pv: {} as Partial<Record<keyof PV, string>>,
+    pv: {} as Partial<Record<keyof PVInterface, string>>,
     load: {} as Partial<Record<keyof LoadInterface, string>>,
   },
   id: "messaging",
@@ -119,20 +119,24 @@ export const messagingMachine = createMachine({
     },
     show: {
       on: {
-        Inverter: {
-          target: "inverter",
+        battery: {
+          target: "SHOW_BATTERY",
         },
-        Battery: {
-          target: "battery",
+        inverter: {
+          target: "SHOW_INVERTER",
         },
-        Load: {
-          target: "load",
+        load: {
+          target: "SHOW_LOAD",
         },
-        Pv: {
-          target: "pv",
+        pv: {
+          target: "SHOW_PV",
         },
       },
     },
+    SHOW_BATTERY: {},
+    SHOW_INVERTER: {},
+    SHOW_LOAD: {},
+    SHOW_PV: {},
     battery: {
       initial: "battery_name",
       states: {
