@@ -37,8 +37,10 @@ export const messagingMachine = createMachine({
         pv: {},
         text: "Choose the action you want",
         keyboard: [
-          [{ text: "admin", callback_data: "admin" }],
-          [{ text: "client", callback_data: "client" }],
+          [
+            { text: "admin", callback_data: "admin" },
+            { text: "client", callback_data: "client" },
+          ],
         ],
       }),
       on: {
@@ -57,6 +59,7 @@ export const messagingMachine = createMachine({
             { text: "add", callback_data: "add" },
             { text: "show", callback_data: "show" },
           ],
+          [{ text: "remove", callback_data: "remove" }],
         ],
       }),
       on: {
@@ -79,20 +82,20 @@ export const messagingMachine = createMachine({
         text: "Choose the component you want",
         keyboard: [
           [
-            { text: "inverter", callback_data: "inverter" },
-            { text: "battery", callback_data: "battery" },
+            { text: "inverter", callback_data: "add_inverter" },
+            { text: "battery", callback_data: "add_battery" },
           ],
           [
-            { text: "load", callback_data: "load" },
-            { text: "pv", callback_data: "pv" },
+            { text: "load", callback_data: "add_load" },
+            { text: "pv", callback_data: "add_pv" },
           ],
         ],
       }),
       on: {
-        BATTERY_COMMAND: "battery",
-        LOAD_COMMAND: "load",
-        PV_COMMAND: "pv",
-        INVERTER_COMMAND: "inverter",
+        ADD_BATTERY_COMMAND: "add_battery",
+        ADD_LOAD_COMMAND: "add_load",
+        ADD_PV_COMMAND: "add_pv",
+        ADD_INVERTER_COMMAND: "add_inverter",
       },
     },
     show: {
@@ -100,17 +103,32 @@ export const messagingMachine = createMachine({
         text: "Choose the component you want",
         keyboard: [
           [
-            { text: "inverter", callback_data: "inverter" },
-            { text: "battery", callback_data: "battery" },
+            { text: "inverter", callback_data: "show_inverters" },
+            { text: "battery", callback_data: "show_batteries" },
           ],
           [
-            { text: "load", callback_data: "load" },
-            { text: "pv", callback_data: "pv" },
+            { text: "load", callback_data: "show_loads" },
+            { text: "pv", callback_data: "show_pvs" },
           ],
         ],
       }),
     },
-    battery: {
+    remove: {
+      entry: assign({
+        text: "Choose the component you want to remove",
+        keyboard: [
+          [
+            { text: "inverter", callback_data: "remove_inverter" },
+            { text: "battery", callback_data: "remove_battery" },
+          ],
+          [
+            { text: "load", callback_data: "remove_load" },
+            { text: "pv", callback_data: "remove_pv" },
+          ],
+        ],
+      }),
+    },
+    add_battery: {
       initial: "battery_name",
       states: {
         battery_name: {
@@ -198,7 +216,7 @@ export const messagingMachine = createMachine({
         },
       },
     },
-    load: {
+    add_load: {
       initial: "load_name",
       states: {
         load_name: {
@@ -236,7 +254,7 @@ export const messagingMachine = createMachine({
         },
       },
     },
-    pv: {
+    add_pv: {
       initial: "pv_company",
       states: {
         pv_company: {
@@ -306,7 +324,7 @@ export const messagingMachine = createMachine({
         },
       },
     },
-    inverter: {
+    add_inverter: {
       initial: "inverter_company",
       states: {
         inverter_company: {

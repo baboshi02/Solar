@@ -1,5 +1,4 @@
 import {
-  InlineKeyboardButton,
   InlineKeyboardMarkup,
   ReplyKeyboardMarkup,
 } from "typescript-telegram-bot-api";

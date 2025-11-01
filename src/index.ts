@@ -1,16 +1,18 @@
 import { TelegramBot } from "typescript-telegram-bot-api";
 import dotenv from "dotenv";
 import { connect_db } from "./db/db";
-import { destroyActor, getOrCreateActor } from "./actor";
+import { getOrCreateActor } from "./actor";
 import { inline_keyboard_markup } from "./commands";
 import { BatteryInterface } from "./interfaces/components/battery";
 import { PVInterface } from "./interfaces/components/pv";
 import { LoadInterface } from "./interfaces/components/loads";
 import { InverterInterface } from "./interfaces/components/inverter";
-import { add_battery } from "./services/battery";
-import { add_inverter } from "./services/inverter";
-import { add_load } from "./services/load";
-import { add_pv } from "./services/pv";
+import { add_battery, get_all_batteries } from "./services/battery";
+import { add_inverter, get_all_inverters } from "./services/inverter";
+import { add_load, get_loads } from "./services/load";
+import { add_pv, get_all_pv } from "./services/pv";
+import { AllSpecifications } from "./interfaces/general";
+import { process_components } from "./utils/processing_components";
 
 dotenv.config();
 const TELEGRAM_BOT_API = process.env.TELEGRAM_BOT_API || "";
@@ -48,10 +50,10 @@ bot.on("message:text", async (msg) => {
       });
     }
     if (
-      snapshot.matches("battery") ||
-      snapshot.matches("pv") ||
-      snapshot.matches("load") ||
-      snapshot.matches("inverter")
+      snapshot.matches("add_battery") ||
+      snapshot.matches("add_pv") ||
+      snapshot.matches("add_load") ||
+      snapshot.matches("add_inverter")
     ) {
       actor.send({ type: "NEXT_INPUT", payload: { input: msg_text } });
       const newSnaphot = actor.getSnapshot();
@@ -59,22 +61,17 @@ bot.on("message:text", async (msg) => {
       //THIS MEANS THE INPUT FINISHED
       if (newSnaphot.matches("completed")) {
         console.log("completed");
-        type AllSpecifications =
-          | BatteryInterface
-          | InverterInterface
-          | PVInterface
-          | LoadInterface;
         let Specifications: AllSpecifications | {} = {};
-        if (snapshot.matches("battery")) {
+        if (snapshot.matches("add_battery")) {
           Specifications = newSnaphot.context.battery;
           await add_battery(Specifications as BatteryInterface);
-        } else if (snapshot.matches("inverter")) {
+        } else if (snapshot.matches("add_inverter")) {
           Specifications = newSnaphot.context.inverter;
           await add_inverter(Specifications as InverterInterface);
-        } else if (snapshot.matches("load")) {
+        } else if (snapshot.matches("add_load")) {
           Specifications = newSnaphot.context.load;
           await add_load(Specifications as LoadInterface);
-        } else if (snapshot.matches("pv")) {
+        } else if (snapshot.matches("add_pv")) {
           Specifications = newSnaphot.context.pv;
           await add_pv(Specifications as PVInterface);
         }
@@ -94,7 +91,6 @@ bot.on("message:text", async (msg) => {
     return bot.sendMessage({ chat_id, text: "Invalid command" });
   } catch (error) {
     console.error(error);
-    bot.sendMessage({ chat_id, text: "Unknown error occured" });
   }
 });
 bot.on("callback_query", async (query) => {
@@ -120,21 +116,78 @@ bot.on("callback_query", async (query) => {
         actor.send({ type: "SHOW_COMMAND" });
         break;
       }
-      case "load": {
+      case "add_load": {
         actor.send({ type: "LOAD_COMMAND" });
         break;
       }
-      case "battery": {
+      case "add_battery": {
         actor.send({ type: "BATTERY_COMMAND" });
         break;
       }
-      case "inverter": {
+      case "add_inverter": {
         actor.send({ type: "INVERTER_COMMAND" });
         break;
       }
-      case "pv": {
+      case "add_pv": {
         actor.send({ type: "PV_COMMAND" });
         break;
+      }
+      case "remove": {
+        actor.send({ type: "REMOVE_COMMAND" });
+        break;
+      }
+      case "show_loads": {
+        const loads = await get_loads();
+        if (!loads) {
+          bot.sendMessage({ chat_id, text: "Sorry component not found" });
+          break;
+        }
+        const processed_loads = process_components(loads, "load")!;
+        console.log("loads: ", processed_loads);
+        processed_loads.map((processed_loads) =>
+          bot.sendMessage({ chat_id, text: processed_loads }),
+        );
+        actor.send({ type: "START_COMMAND" });
+        return bot.answerCallbackQuery({ callback_query_id: query.id });
+      }
+      case "show_batteries": {
+        const batteries = await get_all_batteries();
+        if (!batteries) {
+          bot.sendMessage({ chat_id, text: "Sorry component not found" });
+          break;
+        }
+        const processed_batteries = process_components(batteries, "battery")!;
+        processed_batteries.map((processed_battery) =>
+          bot.sendMessage({ chat_id, text: processed_battery }),
+        );
+        actor.send({ type: "START_COMMAND" });
+        return bot.answerCallbackQuery({ callback_query_id: query.id });
+      }
+      case "show_inverters": {
+        const inverters = await get_all_inverters();
+        if (!inverters) {
+          bot.sendMessage({ chat_id, text: "Sorry component not found" });
+          break;
+        }
+        const processed_inverters = process_components(inverters, "inverter")!;
+        processed_inverters.map((processed_inverter) =>
+          bot.sendMessage({ chat_id, text: processed_inverter }),
+        );
+        actor.send({ type: "START_COMMAND" });
+        return bot.answerCallbackQuery({ callback_query_id: query.id });
+      }
+      case "show_pvs": {
+        const pvs = await get_all_pv();
+        if (!pvs) {
+          bot.sendMessage({ chat_id, text: "Sorry component not found" });
+          break;
+        }
+        const processed_pvs = process_components(pvs, "pv")!;
+        processed_pvs.map((processed_pvs) =>
+          bot.sendMessage({ chat_id, text: processed_pvs }),
+        );
+        actor.send({ type: "START_COMMAND" });
+        return bot.answerCallbackQuery({ callback_query_id: query.id });
       }
     }
     const text = actor.getSnapshot().context.text;
@@ -148,7 +201,6 @@ bot.on("callback_query", async (query) => {
     await bot.answerCallbackQuery({ callback_query_id: query.id });
   } catch (error) {
     console.error(error);
-    bot.sendMessage({ chat_id, text: "Unknown error occured" });
   }
 });
 bot.startPolling();
