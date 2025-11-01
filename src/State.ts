@@ -15,6 +15,9 @@ export const messagingMachine = createMachine({
   },
   id: "messaging",
   initial: "initial",
+  on: {
+    START_COMMAND: "#messaging.start",
+  },
   states: {
     initial: {
       entry: assign({
@@ -25,51 +28,47 @@ export const messagingMachine = createMachine({
         battery: {},
         pv: {},
       }),
-      on: {
-        START_COMMAND: {
-          target: "start",
-        },
-      },
     },
     start: {
       entry: assign({
+        inverter: {},
+        load: {},
+        battery: {},
+        pv: {},
         text: "Choose the action you want",
-        keyboard: [["admin", "client"]],
+        keyboard: [
+          [{ text: "admin", callback_data: "admin" }],
+          [{ text: "client", callback_data: "client" }],
+        ],
       }),
       on: {
-        ADMIN_COMMAND: {
-          target: "admin",
-        },
-        CLIENT_COMMAND: {
-          target: "client",
-        },
+        ADMIN_COMMAND: "admin",
+        CLIENT_COMMAND: "client",
       },
     },
     completed: {
       entry: assign({ text: "Completed Entry Succesfully!!" }),
-      on: {
-        RESTART_COMMAND: {
-          target: "initial",
-        },
-      },
     },
     admin: {
       entry: assign({
         text: "Choose the service you want",
-        keyboard: [["add", "show"]],
+        keyboard: [
+          [
+            { text: "add", callback_data: "add" },
+            { text: "show", callback_data: "show" },
+          ],
+        ],
       }),
       on: {
-        ADD_COMMAND: {
-          target: "add",
-        },
-        SHOW_COMMAND: {
-          target: "show",
-        },
+        ADD_COMMAND: "add",
+
+        SHOW_COMMAND: "show",
       },
     },
     client: {
       entry: assign({
         text: "How are you doing",
+        keyboard: [],
       }),
       on: {
         INITIAL: "start",
@@ -79,31 +78,35 @@ export const messagingMachine = createMachine({
       entry: assign({
         text: "Choose the component you want",
         keyboard: [
-          ["battery", "pv"],
-          ["load", "inverter"],
+          [
+            { text: "inverter", callback_data: "inverter" },
+            { text: "battery", callback_data: "battery" },
+          ],
+          [
+            { text: "load", callback_data: "load" },
+            { text: "pv", callback_data: "pv" },
+          ],
         ],
       }),
       on: {
-        BATTERY_COMMAND: {
-          target: "battery",
-        },
-        LOAD_COMMAND: {
-          target: "load",
-        },
-        PV_COMMAND: {
-          target: "pv",
-        },
-        INVERTER_COMMAND: {
-          target: "inverter",
-        },
+        BATTERY_COMMAND: "battery",
+        LOAD_COMMAND: "load",
+        PV_COMMAND: "pv",
+        INVERTER_COMMAND: "inverter",
       },
     },
     show: {
       entry: assign({
         text: "Choose the component you want",
         keyboard: [
-          ["battery", "pv"],
-          ["load", "inverter"],
+          [
+            { text: "inverter", callback_data: "inverter" },
+            { text: "battery", callback_data: "battery" },
+          ],
+          [
+            { text: "load", callback_data: "load" },
+            { text: "pv", callback_data: "pv" },
+          ],
         ],
       }),
     },
@@ -113,6 +116,7 @@ export const messagingMachine = createMachine({
         battery_name: {
           entry: assign({
             text: "Enter battery name",
+            keyboard: [],
           }),
           on: {
             NEXT_INPUT: {
@@ -162,6 +166,7 @@ export const messagingMachine = createMachine({
         battery_price: {
           entry: assign({
             text: "Enter battery price",
+            keyboard: [],
           }),
           on: {
             NEXT_INPUT: {
@@ -199,6 +204,7 @@ export const messagingMachine = createMachine({
         load_name: {
           entry: assign({
             text: "Enter Name",
+            keyboard: [],
           }),
           on: {
             NEXT_INPUT: {
@@ -234,7 +240,10 @@ export const messagingMachine = createMachine({
       initial: "pv_company",
       states: {
         pv_company: {
-          entry: assign({ text: "Enter PV Company name" }),
+          entry: assign({
+            text: "Enter PV Company name",
+            keyboard: [],
+          }),
           on: {
             NEXT_INPUT: {
               target: "pv_price",
@@ -248,7 +257,9 @@ export const messagingMachine = createMachine({
           },
         },
         pv_price: {
-          entry: assign({ text: "Enter PV Price" }),
+          entry: assign({
+            text: "Enter PV Price",
+          }),
           on: {
             NEXT_INPUT: {
               target: "pv_power",
@@ -262,7 +273,9 @@ export const messagingMachine = createMachine({
           },
         },
         pv_power: {
-          entry: assign({ text: "Enter PV Power" }),
+          entry: assign({
+            text: "Enter PV Power",
+          }),
           on: {
             NEXT_INPUT: {
               target: "pv_voltage",
@@ -276,7 +289,9 @@ export const messagingMachine = createMachine({
           },
         },
         pv_voltage: {
-          entry: assign({ text: "Enter PV Voltage" }),
+          entry: assign({
+            text: "Enter PV Voltage",
+          }),
           on: {
             NEXT_INPUT: {
               target: "#messaging.completed",
@@ -295,7 +310,7 @@ export const messagingMachine = createMachine({
       initial: "inverter_company",
       states: {
         inverter_company: {
-          entry: assign({ text: "Enter Inverter Company" }),
+          entry: assign({ text: "Enter Inverter Company", keyboard: [] }),
           on: {
             NEXT_INPUT: {
               target: "inverter_price",
@@ -309,7 +324,7 @@ export const messagingMachine = createMachine({
           },
         },
         inverter_price: {
-          entry: assign({ text: "Enter Inverter Price" }),
+          entry: assign({ text: "Enter Inverter Price", keyboard: [] }),
           on: {
             NEXT_INPUT: {
               target: "inverter_min_voltage",
@@ -324,7 +339,7 @@ export const messagingMachine = createMachine({
         },
         inverter_min_voltage: {
           entry: assign({
-            text: "Enter min inverter voltafe",
+            text: "Enter min inverter voltage",
           }),
           on: {
             NEXT_INPUT: {
