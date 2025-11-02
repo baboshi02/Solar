@@ -143,10 +143,12 @@ bot.on("callback_query", async (query) => {
           break;
         }
         const processed_loads = process_components(loads, "load")!;
-        console.log("loads: ", processed_loads);
-        processed_loads.map((processed_loads) =>
-          bot.sendMessage({ chat_id, text: processed_loads }),
-        );
+        bot.sendMessage({ chat_id, text: "----------" });
+        bot.sendMessage({ chat_id, text: "Loads: " });
+        for (const processed_load of processed_loads) {
+          bot.sendMessage({ chat_id, text: processed_load });
+        }
+        bot.sendMessage({ chat_id, text: "----------" });
         actor.send({ type: "START_COMMAND" });
         return bot.answerCallbackQuery({ callback_query_id: query.id });
       }
@@ -157,9 +159,12 @@ bot.on("callback_query", async (query) => {
           break;
         }
         const processed_batteries = process_components(batteries, "battery")!;
-        processed_batteries.map((processed_battery) =>
-          bot.sendMessage({ chat_id, text: processed_battery }),
-        );
+        bot.sendMessage({ chat_id, text: "----------" });
+        bot.sendMessage({ chat_id, text: "Batteries: " });
+        for (const processed_battery of processed_batteries) {
+          bot.sendMessage({ chat_id, text: processed_battery });
+        }
+        bot.sendMessage({ chat_id, text: "----------" });
         actor.send({ type: "START_COMMAND" });
         return bot.answerCallbackQuery({ callback_query_id: query.id });
       }
@@ -169,10 +174,14 @@ bot.on("callback_query", async (query) => {
           bot.sendMessage({ chat_id, text: "Sorry component not found" });
           break;
         }
+        bot.sendMessage({ chat_id, text: "Inverters: " });
+        bot.sendMessage({ chat_id, text: "----------" });
         const processed_inverters = process_components(inverters, "inverter")!;
-        processed_inverters.map((processed_inverter) =>
-          bot.sendMessage({ chat_id, text: processed_inverter }),
-        );
+        for (const processed_inverter of processed_inverters) {
+          bot.sendMessage({ chat_id, text: processed_inverter });
+        }
+
+        bot.sendMessage({ chat_id, text: "----------" });
         actor.send({ type: "START_COMMAND" });
         return bot.answerCallbackQuery({ callback_query_id: query.id });
       }
@@ -182,10 +191,13 @@ bot.on("callback_query", async (query) => {
           bot.sendMessage({ chat_id, text: "Sorry component not found" });
           break;
         }
+        bot.sendMessage({ chat_id, text: "----------" });
+        bot.sendMessage({ chat_id, text: "PVs: " });
         const processed_pvs = process_components(pvs, "pv")!;
-        processed_pvs.map((processed_pvs) =>
-          bot.sendMessage({ chat_id, text: processed_pvs }),
-        );
+        for (const processed_pv of processed_pvs) {
+          bot.sendMessage({ chat_id, text: processed_pv });
+        }
+        bot.sendMessage({ chat_id, text: "----------" });
         actor.send({ type: "START_COMMAND" });
         return bot.answerCallbackQuery({ callback_query_id: query.id });
       }
