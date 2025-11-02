@@ -1,15 +1,15 @@
-import { TelegramBot } from "typescript-telegram-bot-api";
+import { InlineKeyboardMarkup, TelegramBot } from "typescript-telegram-bot-api";
 import dotenv from "dotenv";
 import { connect_db } from "./db/db";
 import { getOrCreateActor } from "./actor";
-import { inline_keyboard_markup } from "./commands";
+import { Inline_Keyboard, inline_keyboard_markup } from "./commands";
 import { BatteryInterface } from "./interfaces/components/battery";
 import { PVInterface } from "./interfaces/components/pv";
 import { LoadInterface } from "./interfaces/components/loads";
 import { InverterInterface } from "./interfaces/components/inverter";
 import { add_battery, get_all_batteries } from "./services/battery";
 import { add_inverter, get_all_inverters } from "./services/inverter";
-import { add_load, get_loads } from "./services/load";
+import { add_load, delete_load, get_load, get_loads } from "./services/load";
 import { add_pv, get_all_pv } from "./services/pv";
 import { AllSpecifications } from "./interfaces/general";
 import { process_components } from "./utils/processing_components";
@@ -33,9 +33,9 @@ bot.on("message:text", async (msg) => {
   if (msg_text === "/start") {
     actor.send({ type: "START_COMMAND" });
   }
-  const snapshot = actor.getSnapshot();
   //IF NO ID THEN ACCOUNT IS A CHANNEL NOT A PERSON
   try {
+    const snapshot = actor.getSnapshot();
     if (msg_text === "/start") {
       actor.send({ type: "START_COMMAND" });
       let state = actor.getSnapshot();
@@ -99,6 +99,18 @@ bot.on("callback_query", async (query) => {
   const message_id = query.message?.message_id!;
   try {
     const { data } = query;
+    if (!data) {
+      return bot.sendMessage({
+        chat_id,
+        text: "Sorry no data in inline keyboard",
+      });
+    }
+    if (data.startsWith("remove_load_")) {
+      const load_id = data.split("_")[2];
+      await delete_load({ _id: load_id });
+      actor.send({ type: "START_COMMAND" });
+      return bot.sendMessage({ chat_id, text: "Deleted Item succesfully" });
+    }
     switch (data) {
       case "admin": {
         actor.send({ type: "ADMIN_COMMAND" });
@@ -117,24 +129,55 @@ bot.on("callback_query", async (query) => {
         break;
       }
       case "add_load": {
-        actor.send({ type: "LOAD_COMMAND" });
+        actor.send({ type: "ADD_LOAD_COMMAND" });
         break;
       }
       case "add_battery": {
-        actor.send({ type: "BATTERY_COMMAND" });
+        actor.send({ type: "ADD_BATTERY_COMMAND" });
         break;
       }
       case "add_inverter": {
-        actor.send({ type: "INVERTER_COMMAND" });
+        actor.send({ type: "ADD_INVERTER_COMMAND" });
         break;
       }
       case "add_pv": {
-        actor.send({ type: "PV_COMMAND" });
+        actor.send({ type: "ADD_PV_COMMAND" });
         break;
       }
       case "remove": {
         actor.send({ type: "REMOVE_COMMAND" });
         break;
+      }
+      case "remove_loads": {
+        const loads = await get_loads();
+        if (!loads) {
+          actor.send({ type: "START_COMMAND" });
+          return bot.sendMessage({ chat_id, text: "Sorry load not found" });
+        }
+        const text = "Choose the load you want to remove";
+        const loadcolumns: Inline_Keyboard[][] = [];
+        let loadRows: Inline_Keyboard[] = [];
+        loads.forEach((entry: any) => {
+          loadRows.push({
+            text: entry.name,
+            callback_data: `remove_load_${entry.id}`,
+          });
+          // Once we have 2 elements, push and reset
+          if (loadRows.length === 2) {
+            loadcolumns.push(loadRows);
+            loadRows = [];
+          }
+        });
+        // Push any remaining items (in case of an odd count)
+        if (loadRows.length > 0) {
+          loadcolumns.push(loadRows);
+        }
+        return bot.editMessageText({
+          chat_id,
+          message_id,
+          text,
+          reply_markup: { inline_keyboard: loadcolumns },
+        });
       }
       case "show_loads": {
         const loads = await get_loads();

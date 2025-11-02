@@ -13,11 +13,13 @@ export const reply_keyboard_markup = (...keyboard: string[][]) => {
   return reply_keyboard;
 };
 
-interface data {
+export interface Inline_Keyboard {
   text: string;
   callback_data: string;
 }
-export const inline_keyboard_markup = (...inline_keyboard: data[][]) => {
+export const inline_keyboard_markup = (
+  ...inline_keyboard: Inline_Keyboard[][]
+) => {
   const inlineKeyboardMarkup: InlineKeyboardMarkup = {
     inline_keyboard,
   };

@@ -64,8 +64,8 @@ export const messagingMachine = createMachine({
       }),
       on: {
         ADD_COMMAND: "add",
-
         SHOW_COMMAND: "show",
+        REMOVE_COMMAND: "remove",
       },
     },
     client: {
@@ -114,16 +114,22 @@ export const messagingMachine = createMachine({
       }),
     },
     remove: {
+      on: {
+        REMOVE_LOADS: "remove_loads",
+        REMOVE_INVERTERS: "remove_inverters",
+        REMOVE_PVS: "remove_pvs",
+        REMOVE_BATTERIES: "remove_batteries",
+      },
       entry: assign({
         text: "Choose the component you want to remove",
         keyboard: [
           [
-            { text: "inverter", callback_data: "remove_inverter" },
-            { text: "battery", callback_data: "remove_battery" },
+            { text: "inverter", callback_data: "remove_inverters" },
+            { text: "battery", callback_data: "remove_batterys" },
           ],
           [
-            { text: "load", callback_data: "remove_load" },
-            { text: "pv", callback_data: "remove_pv" },
+            { text: "load", callback_data: "remove_loads" },
+            { text: "pv", callback_data: "remove_pvs" },
           ],
         ],
       }),
@@ -216,6 +222,10 @@ export const messagingMachine = createMachine({
         },
       },
     },
+    remove_inverters: {},
+    remove_loads: {},
+    remove_pvs: {},
+    remove_batteries: {},
     add_load: {
       initial: "load_name",
       states: {
