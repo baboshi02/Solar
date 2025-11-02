@@ -125,7 +125,7 @@ export const messagingMachine = createMachine({
         keyboard: [
           [
             { text: "inverter", callback_data: "remove_inverters" },
-            { text: "battery", callback_data: "remove_batterys" },
+            { text: "battery", callback_data: "remove_batteries" },
           ],
           [
             { text: "load", callback_data: "remove_loads" },

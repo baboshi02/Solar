@@ -13,12 +13,14 @@ import { add_load, delete_load, get_load, get_loads } from "./services/load";
 import { add_pv, get_all_pv } from "./services/pv";
 import { AllSpecifications } from "./interfaces/general";
 import { process_components } from "./utils/processing_components";
+import { process_remove_component } from "./utils/processing_remove";
 
 dotenv.config();
 const TELEGRAM_BOT_API = process.env.TELEGRAM_BOT_API || "";
 const mongourl = process.env.MONGO_URL || "";
 const bot = new TelegramBot({ botToken: TELEGRAM_BOT_API });
 
+//TODO: Add capability of back button
 connect_db(mongourl);
 bot.on("message:text", async (msg) => {
   const msg_text = msg.text;
@@ -105,6 +107,24 @@ bot.on("callback_query", async (query) => {
         text: "Sorry no data in inline keyboard",
       });
     }
+    if (data.startsWith("remove_battery_")) {
+      const battert_id = data.split("_")[2];
+      await delete_load({ _id: battert_id });
+      actor.send({ type: "START_COMMAND" });
+      return bot.sendMessage({ chat_id, text: "Deleted Item succesfully" });
+    }
+    if (data.startsWith("remove_inverter_")) {
+      const inverter_id = data.split("_")[2];
+      await delete_load({ _id: inverter_id });
+      actor.send({ type: "START_COMMAND" });
+      return bot.sendMessage({ chat_id, text: "Deleted Item succesfully" });
+    }
+    if (data.startsWith("remove_pv_")) {
+      const pv_id = data.split("_")[2];
+      await delete_load({ _id: pv_id });
+      actor.send({ type: "START_COMMAND" });
+      return bot.sendMessage({ chat_id, text: "Deleted Item succesfully" });
+    }
     if (data.startsWith("remove_load_")) {
       const load_id = data.split("_")[2];
       await delete_load({ _id: load_id });
@@ -148,30 +168,63 @@ bot.on("callback_query", async (query) => {
         actor.send({ type: "REMOVE_COMMAND" });
         break;
       }
+      case "remove_inverters": {
+        const inverters = await get_all_inverters();
+        if (!inverters) {
+          actor.send({ type: "START_COMMAND" });
+          return bot.sendMessage({ chat_id, text: "Sorry load not found" });
+        }
+        const loadcolumns = process_remove_component(inverters, "inverter");
+        const text = "Choose the inverter you want to remove";
+        bot.answerCallbackQuery({ callback_query_id: query.id });
+        return bot.editMessageText({
+          chat_id,
+          message_id,
+          text,
+          reply_markup: { inline_keyboard: loadcolumns },
+        });
+      }
+      case "remove_pvs": {
+        const pvs = await get_all_pv();
+        if (!pvs) {
+          actor.send({ type: "START_COMMAND" });
+          return bot.sendMessage({ chat_id, text: "Sorry load not found" });
+        }
+        const loadcolumns = process_remove_component(pvs, "pv");
+        const text = "Choose the pv you want to remove";
+        bot.answerCallbackQuery({ callback_query_id: query.id });
+        return bot.editMessageText({
+          chat_id,
+          message_id,
+          text,
+          reply_markup: { inline_keyboard: loadcolumns },
+        });
+      }
+      case "remove_batteries": {
+        const batteries = await get_all_batteries();
+        if (!batteries) {
+          actor.send({ type: "START_COMMAND" });
+          return bot.sendMessage({ chat_id, text: "Sorry battery not found" });
+        }
+        const loadcolumns = process_remove_component(batteries, "battery");
+        const text = "Choose the battery you want to remove";
+        bot.answerCallbackQuery({ callback_query_id: query.id });
+        return bot.editMessageText({
+          chat_id,
+          message_id,
+          text,
+          reply_markup: { inline_keyboard: loadcolumns },
+        });
+      }
       case "remove_loads": {
         const loads = await get_loads();
         if (!loads) {
           actor.send({ type: "START_COMMAND" });
           return bot.sendMessage({ chat_id, text: "Sorry load not found" });
         }
+        const loadcolumns = process_remove_component(loads, "load");
         const text = "Choose the load you want to remove";
-        const loadcolumns: Inline_Keyboard[][] = [];
-        let loadRows: Inline_Keyboard[] = [];
-        loads.forEach((entry: any) => {
-          loadRows.push({
-            text: entry.name,
-            callback_data: `remove_load_${entry.id}`,
-          });
-          // Once we have 2 elements, push and reset
-          if (loadRows.length === 2) {
-            loadcolumns.push(loadRows);
-            loadRows = [];
-          }
-        });
-        // Push any remaining items (in case of an odd count)
-        if (loadRows.length > 0) {
-          loadcolumns.push(loadRows);
-        }
+        bot.answerCallbackQuery({ callback_query_id: query.id });
         return bot.editMessageText({
           chat_id,
           message_id,
