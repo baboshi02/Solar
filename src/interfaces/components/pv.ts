@@ -1,4 +1,4 @@
-export interface PV {
+export interface PVInterface {
   company: string;
   price: number;
   power: number;

@@ -1,4 +1,4 @@
-export interface Inverter {
+export interface InverterInterface {
   company: string;
   price: number;
   min_pv_input_voltage: number;

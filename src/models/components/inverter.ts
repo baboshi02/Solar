@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
-import { Inverter } from "../interfaces/components/inverter";
+import { InverterInterface } from "../../interfaces/components/inverter";
 
-const InverterSchema = new Schema<Inverter>({
+const InverterSchema = new Schema<InverterInterface>({
   company: { type: String, required: true },
   power: { type: Number, required: true },
   price: { type: Number, required: true },
@@ -10,4 +10,7 @@ const InverterSchema = new Schema<Inverter>({
   battery_input_voltage: { type: Number, required: true },
 });
 
-export const InverterModel = model<Inverter>("Inverter", InverterSchema);
+export const InverterModel = model<InverterInterface>(
+  "Inverter",
+  InverterSchema,
+);

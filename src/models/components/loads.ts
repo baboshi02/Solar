@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
-import { Load } from "../../interfaces/components/loads";
+import { LoadInterface } from "../../interfaces/components/loads";
 
-const LoadSchema = new Schema<Load>(
+const LoadSchema = new Schema<LoadInterface>(
   {
     name: { type: String, required: true, unique: true },
     power: { type: Number, required: true },
@@ -9,4 +9,4 @@ const LoadSchema = new Schema<Load>(
   { timestamps: true },
 );
 
-export const LoadModel = model<Load>("Load", LoadSchema);
+export const LoadModel = model<LoadInterface>("Load", LoadSchema);
