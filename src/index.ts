@@ -18,6 +18,7 @@ import { process_remove_component } from "./utils/processing_remove";
 dotenv.config();
 const TELEGRAM_BOT_API = process.env.TELEGRAM_BOT_API || "";
 const mongourl = process.env.MONGO_URL || "";
+const owner_id = process.env.OWNER_TELEGRAM_ID || "";
 const bot = new TelegramBot({ botToken: TELEGRAM_BOT_API });
 
 //TODO: Add capability of back button
@@ -99,6 +100,7 @@ bot.on("callback_query", async (query) => {
   const chat_id = query.message?.chat.id!;
   const actor = getOrCreateActor(chat_id);
   const message_id = query.message?.message_id!;
+  const user_id = query.from.id;
   try {
     const { data } = query;
     if (!data) {
@@ -136,6 +138,15 @@ bot.on("callback_query", async (query) => {
     }
     switch (data) {
       case "admin": {
+        if (user_id != Number(owner_id)) {
+          actor.send({ type: "START_COMMAND" });
+          await bot.deleteMessage({ chat_id, message_id });
+          await bot.sendMessage({ chat_id, text: "Access unauthorized!!" });
+          return bot.sendMessage({
+            chat_id,
+            text: "You can only access client command",
+          });
+        }
         actor.send({ type: "ADMIN_COMMAND" });
         break;
       }
