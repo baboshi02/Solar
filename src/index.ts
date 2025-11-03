@@ -117,18 +117,21 @@ bot.on("callback_query", async (query) => {
       const inverter_id = data.split("_")[2];
       await delete_load({ _id: inverter_id });
       actor.send({ type: "START_COMMAND" });
+      bot.deleteMessage({ chat_id, message_id });
       return bot.sendMessage({ chat_id, text: "Deleted Item succesfully" });
     }
     if (data.startsWith("remove_pv_")) {
       const pv_id = data.split("_")[2];
       await delete_load({ _id: pv_id });
       actor.send({ type: "START_COMMAND" });
+      bot.deleteMessage({ chat_id, message_id });
       return bot.sendMessage({ chat_id, text: "Deleted Item succesfully" });
     }
     if (data.startsWith("remove_load_")) {
       const load_id = data.split("_")[2];
       await delete_load({ _id: load_id });
       actor.send({ type: "START_COMMAND" });
+      bot.deleteMessage({ chat_id, message_id });
       return bot.sendMessage({ chat_id, text: "Deleted Item succesfully" });
     }
     switch (data) {
@@ -306,7 +309,7 @@ bot.on("callback_query", async (query) => {
     } else {
       bot.editMessageText({ message_id, chat_id, text, reply_markup });
     }
-    await bot.answerCallbackQuery({ callback_query_id: query.id });
+    return bot.answerCallbackQuery({ callback_query_id: query.id });
   } catch (error) {
     console.error(error);
   }
